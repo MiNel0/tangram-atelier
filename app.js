@@ -492,6 +492,7 @@
   }
 
   function generateComposition() {
+    if (state.silhouettes.some((silhouette) => silhouette.pieces.length) && !confirm('Modifier la composition supprimera les silhouettes existantes. Continuer ?')) return false;
     if (!validateComposition()) return false;
     try {
       const seed = controls.seed.value.trim().slice(0, 80);
@@ -540,22 +541,18 @@
   }
 
   function unlockComposition(nextStep = 'composition') {
-    if (state.silhouettes.some((silhouette) => silhouette.pieces.length) && !confirm('Revenir en arrière supprimera les silhouettes. Continuer ?')) return false;
     state.locked = false;
     state.phase = 'composition';
     state.setupStep = nextStep;
-    state.silhouettes = [];
-    state.activeSilhouetteId = null;
     state.selectedId = null;
-    if (nextStep === 'size') { state.composition = []; state.dirty = true; }
-    renderAll();
     return true;
   }
 
   function navigateTo(target) {
     if (target === 'size') {
       if (state.locked && !unlockComposition('size')) return;
-      if (!state.locked) { state.setupStep = 'size'; state.composition = []; state.dirty = true; renderAll(); }
+      state.setupStep = 'size';
+      renderAll();
       status('Choisissez la taille, puis cliquez sur « Composition ».');
       return;
     }

@@ -14,6 +14,9 @@ assert.match(htmlSource, /id="printSilhouetteWhiteEdges"/, 'Le mode noir avec ar
 assert.match(appSource, /pieceColor'\)\.addEventListener\('input'/, 'La couleur de la pièce sélectionnée doit être modifiable.');
 assert.match(appSource, /previewSvg\(pieces, 'color'\)/, 'Les cartes de silhouettes doivent afficher les couleurs enregistrées.');
 assert.match(appSource, /appendBlackSilhouette\(piecesLayer, pieces, '#ffffff'\)/, 'Les arêtes blanches doivent être rendues dans la silhouette noire.');
+const backwardNavigationSource = appSource.match(/function unlockComposition[\s\S]+?function navigateTo[\s\S]+?if \(target === 'silhouette'\)/)?.[0] || '';
+assert.doesNotMatch(backwardNavigationSource, /state\.silhouettes\s*=\s*\[\]/, 'Revenir aux étapes précédentes ne doit pas supprimer les silhouettes.');
+assert.match(appSource, /function generateComposition\(\)[\s\S]+?confirm\('Modifier la composition supprimera les silhouettes existantes\./, 'La suppression ne doit être proposée qu’au moment de régénérer la composition.');
 
 const groupedProject = Library.projects([
   { id: 'recent', updatedAt: 2, project: { side: 140, seed: 'test', composition: [{ id: 'recent-piece', sourceId: 'recent-source', type: 'triangle', x: 0 }], silhouettes: [{ pieces: [{ sourceId: 'recent-source' }] }] } },
