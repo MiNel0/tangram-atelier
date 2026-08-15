@@ -35,6 +35,10 @@ assert.match(desktopMainSource, /preload:\s*path\.join\(__dirname, 'preload\.js'
 assert.match(desktopMainSource, /ipcMain\.handle\('sync-usb'/, 'Le processus principal doit gérer la synchronisation USB.');
 assert.match(desktopMainSource, /webContents\.printToPDF\(\{[^}]*pageSize:\s*'A4'/s, 'Chaque document doit être généré en PDF A4 par Electron.');
 assert.match(preloadSource, /syncUsb:\s*\(\)\s*=>\s*ipcRenderer\.invoke\('sync-usb'\)/, 'Le renderer ne doit exposer que l’action USB nécessaire.');
+assert.match(htmlSource, /id="syncUsb"[^>]*hidden/, 'Le bouton USB doit rester réservé à l’application Windows.');
+assert.match(htmlSource, /id="usbStatus"[^>]*role="status"/, 'La progression USB doit être annoncée clairement.');
+assert.match(appSource, /window\.tangramDesktop\?\.syncUsb/, 'L’interface doit détecter la fonction Windows avant de proposer la synchronisation.');
+assert.match(appSource, /tangramDesktop\.syncUsb\(\)/, 'Le bouton doit lancer la synchronisation USB sécurisée.');
 
 const groupedProject = Library.projects([
   { id: 'recent', updatedAt: 2, project: { side: 140, seed: 'test', composition: [{ id: 'recent-piece', sourceId: 'recent-source', type: 'triangle', x: 0 }], silhouettes: [{ pieces: [{ sourceId: 'recent-source' }] }] } },

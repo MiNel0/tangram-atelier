@@ -18,6 +18,7 @@ button.wide { width: 100%; margin-top: 9px; }
 .global-brand { display: flex; align-items: center; gap: 16px; }
 .back-button { border-color: transparent; color: #267579; background: #edf5f4; }
 .global-header nav { display: flex; gap: 7px; }
+.usb-status { align-self: center; max-width: 280px; color: #267579; font-size: 12px; font-weight: 700; }
 .global-header nav button { border-color: transparent; background: transparent; }
 .global-header nav button.active { color: #155c60; background: #dff1ee; }
 .global-header nav button.primary { color: white; background: #16666a; }

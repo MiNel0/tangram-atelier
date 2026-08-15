@@ -873,6 +873,28 @@
     renderPieces();
   }
 
+  async function syncUsbLibrary() {
+    const button = $('syncUsb');
+    const message = $('usbStatus');
+    button.disabled = true;
+    button.textContent = 'Synchronisation…';
+    message.hidden = true;
+    try {
+      if (libraryDirty) persistSilhouette();
+      await Promise.all(savedRecords.map(Saved.put));
+      const result = await window.tangramDesktop.syncUsb();
+      if (result.canceled) return;
+      message.textContent = result.ok ? `✓ ${result.count} PDF copiés sur la clé` : result.error;
+      message.hidden = false;
+    } catch {
+      message.textContent = 'La synchronisation a échoué. Vérifiez la clé USB.';
+      message.hidden = false;
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Clé USB';
+    }
+  }
+
   function download(name, content, type) {
     const url = URL.createObjectURL(new Blob([content], { type }));
     const link = document.createElement('a');
@@ -975,6 +997,10 @@
   $('navHome').addEventListener('click', goHome);
   $('navTangrams').addEventListener('click', () => showView('drive', 'tangrams'));
   $('navNew').addEventListener('click', startNewProject);
+  if (window.tangramDesktop?.syncUsb) {
+    $('syncUsb').hidden = false;
+    $('syncUsb').addEventListener('click', syncUsbLibrary);
+  }
   $('homeAllTangrams').addEventListener('click', () => showView('drive', 'tangrams'));
   $('homeSeeAll').addEventListener('click', () => showView('drive', 'silhouettes'));
   $('driveSearch').addEventListener('input', renderSavedLibrary);
