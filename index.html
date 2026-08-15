@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tangram Atelier</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css?v=drive-6">
+</head>
+<body data-phase="composition" data-stage="size" data-view="home">
+  <header class="global-header">
+    <div class="global-brand"><button id="navBack" class="back-button" type="button" hidden>← Retour</button><button id="goHome" class="brand-button" type="button"><img src="assets/icon.svg" alt="">Tangram Atelier</button></div>
+    <nav aria-label="Menu principal">
+      <button id="navHome" class="active" type="button">Accueil</button>
+      <button id="navTangrams" type="button">Mes tangrams</button>
+      <button id="navNew" class="primary" type="button">＋ Nouveau</button>
+    </nav>
+  </header>
+
+  <main id="homeView" class="home-view">
+    <section class="home-tangrams">
+      <div class="drive-heading"><div><h1>Mes tangrams</h1><p>Choisissez un tangram pour retrouver sa composition et ses silhouettes.</p></div><button id="homeAllTangrams" type="button">Tout afficher</button></div>
+      <p id="homeTangramEmpty" class="empty-library">Aucun tangram pour le moment. Cliquez sur « Nouveau » pour commencer.</p>
+      <div id="homeTangrams" class="tangram-carousel" aria-label="Mes tangrams"></div>
+    </section>
+    <section class="home-recents">
+      <div class="drive-heading"><div><h2>Silhouettes récentes</h2><p>Vos créations enregistrées apparaissent automatiquement ici.</p></div><button id="homeSeeAll" type="button">Tout afficher</button></div>
+      <p id="homeEmpty" class="empty-library">Aucune silhouette pour le moment.</p>
+      <div id="homeSilhouettes" class="drive-grid recent-grid"></div>
+    </section>
+  </main>
+
+  <main id="driveView" class="drive-view" hidden>
+    <div class="drive-heading"><div><h1 id="driveTitle">Mes silhouettes</h1><p id="driveSubtitle">Toutes vos créations enregistrées.</p></div><input id="driveSearch" type="search" placeholder="Rechercher…" aria-label="Rechercher dans la bibliothèque"></div>
+    <p id="driveEmpty" class="empty-library">Aucun élément enregistré.</p>
+    <div id="driveGrid" class="drive-grid"></div>
+  </main>
+
+  <main id="editorView" class="app" hidden>
+    <aside class="sidebar">
+      <header>
+        <span class="eyebrow">Éditeur hors ligne</span>
+        <h1>Tangram Atelier</h1>
+      </header>
+
+      <ol class="workflow" aria-label="Étapes du projet">
+        <li><button id="stepSize" class="active" type="button"><span>1</span>Carré</button></li>
+        <li><button id="stepComposition" type="button"><span>2</span>Composition</button></li>
+        <li><button id="stepSilhouette" type="button"><span>3</span>Silhouette</button></li>
+        <li><button id="stepPrint" type="button"><span>4</span>Imprimer</button></li>
+      </ol>
+
+      <section id="sizePanel" class="setup-panel">
+        <h2>1. Choisir la taille</h2>
+        <p class="step-copy">Quelle taille doit faire le carré une fois imprimé ?</p>
+        <label>Côté du carré (mm)
+          <input id="zoneSide" type="number" min="30" max="190" step="1" value="140">
+        </label>
+        <p class="hint">Entre 30 et 190 mm · impression à taille réelle.</p>
+      </section>
+
+      <section id="compositionPanel" class="setup-panel">
+        <h2>2. Créer la composition</h2>
+        <p class="step-copy">Le modèle classique est conseillé pour commencer.</p>
+        <button id="classicPreset" class="choice-card wide"><strong>Tangram classique</strong><span>7 pièces · recommandé</span></button>
+        <details class="advanced">
+          <summary>Personnaliser les pièces et la graine</summary>
+          <div class="seed-row">
+            <label>Graine<input id="seed" type="text" maxlength="80" value="tangram-001"></label>
+            <button id="randomSeed">Nouvelle</button>
+          </div>
+          <div class="shape-list" aria-label="Quantités des formes">
+            <div class="shape-row"><span class="shape-preview triangle"></span><span>Triangles</span><input data-count="triangle" type="number" min="0" max="100" value="5" aria-label="Quantité Triangle rectangle isocèle"></div>
+            <div class="shape-row"><span class="shape-preview square"></span><span>Carrés</span><input data-count="square" type="number" min="0" max="100" value="1" aria-label="Quantité Carré"></div>
+            <div class="shape-row"><span class="shape-preview rectangle"></span><span>Rectangles</span><input data-count="rectangle" type="number" min="0" max="100" value="0" aria-label="Quantité Rectangle"></div>
+            <div class="shape-row"><span class="shape-preview diamond"></span><span>Losanges</span><input data-count="diamond" type="number" min="0" max="100" value="0" aria-label="Quantité Losange"></div>
+            <div class="shape-row"><span class="shape-preview parallelogram"></span><span>Parallélogrammes</span><input data-count="parallelogram" type="number" min="0" max="100" value="1" aria-label="Quantité Parallélogramme"></div>
+            <div class="shape-row"><span class="shape-preview trapezoid"></span><span>Trapèzes</span><input data-count="trapezoid" type="number" min="0" max="100" value="0" aria-label="Quantité Trapèze"></div>
+          </div>
+        </details>
+        <div id="compositionValidation" class="composition-validation" role="status" aria-live="polite"></div>
+        <button id="generate" class="primary wide">Générer un aperçu</button>
+      </section>
+
+      <section id="silhouettePanel" hidden>
+        <h2>3. Créer la silhouette</h2><span id="pieceType" hidden>Aucune</span>
+        <div class="silhouette-row">
+          <select id="silhouetteSelect" aria-label="Silhouette"></select>
+          <button id="newSilhouette" title="Nouvelle silhouette">＋</button>
+          <button id="deleteSilhouette" class="danger" title="Supprimer la silhouette">×</button>
+        </div>
+        <details class="advanced compact-options">
+          <summary>Nom et aides au placement</summary>
+          <label>Nom<input id="silhouetteName" type="text" maxlength="40" value="Silhouette 1"></label>
+          <div class="assist-options">
+            <label class="check"><input id="snapPieces" type="checkbox" checked> Arêtes et sommets</label>
+            <label class="check"><input id="snapGrid" type="checkbox" checked> Grille de 5 mm</label>
+          </div>
+          <p class="hint shortcuts">Glisser : déplacer · poignée ronde : tourner · Maj : pas de 15°.</p>
+        </details>
+
+        <div class="library-title"><strong>Pièces disponibles</strong><span id="libraryCount"></span></div>
+        <div id="pieceLibrary" class="piece-library" aria-label="Pièces disponibles"></div>
+        <p class="hint library-hint">Glissez chaque pièce sur la feuille A4.</p>
+
+        <div id="selectionPanel" class="selection muted" hidden>
+          <fieldset id="pieceFields" disabled>
+            <p class="hint direct-hint">Les commandes apparaissent directement sur la pièce sélectionnée.</p>
+          </fieldset>
+        </div>
+        <div id="silhouetteValidation" class="composition-validation" role="status" aria-live="polite"></div>
+        <button id="resetSilhouette" class="text-button wide">Vider la feuille</button>
+      </section>
+
+      <section id="finishPanel" hidden>
+        <h2>4. Imprimer</h2>
+        <p class="finish-message">✓ Votre tangram est prêt.</p>
+        <button id="printSilhouette" class="primary wide">Imprimer la silhouette noire</button>
+        <button id="printComposition" class="wide">Imprimer le rangement</button>
+      </section>
+
+      <section class="files">
+        <details class="advanced project-options">
+          <summary>Exporter ou importer une sauvegarde</summary>
+          <div class="actions wrap"><button id="save">Exporter</button><button id="load">Importer</button></div>
+        </details>
+        <input id="fileInput" type="file" accept="application/json,.json" hidden>
+      </section>
+
+      <div class="legacy-controls" hidden>
+        <select id="orientation"><option value="portrait">Portrait</option></select>
+        <input id="margin" value="10"><input id="zoneWidth" value="140"><input id="zoneHeight" value="140"><input id="grid" value="5">
+        <input id="showDimensions" type="checkbox" checked><input id="pieceName"><input id="pieceX"><input id="pieceY"><input id="pieceWidth"><input id="pieceHeight"><input id="pieceRotation"><input id="pieceColor" type="color">
+        <button id="duplicate"></button><button id="remove"></button><button id="flipPiece"></button><button id="exportSvg"></button><button id="print"></button>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <div class="topbar">
+        <div><strong id="modeLabel">Composition automatique</strong><span id="pageLabel">A4 · 210 × 297 mm</span><span id="zoneLabel">Carré 140 mm</span><span id="pieceCount">0 pièce</span></div>
+        <button id="clear">Recommencer</button>
+      </div>
+      <div class="page-shell">
+        <svg id="page" xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297" aria-label="Page A4 du tangram">
+          <defs><pattern id="minorGrid" width="5" height="5" patternUnits="userSpaceOnUse"><path id="gridPath" d="M 5 0 L 0 0 0 5" fill="none" stroke="#dfe7e8" stroke-width="0.18"/></pattern></defs>
+          <rect class="paper" width="100%" height="100%" fill="white"/>
+          <rect class="grid-fill screen-only" width="100%" height="100%" fill="url(#minorGrid)"/>
+          <rect id="printable" class="printable screen-only" x="10" y="10" width="190" height="277"/>
+          <g id="zoneLayer"><rect id="tangramZone" class="tangram-zone" x="35" y="78.5" width="140" height="140"/></g>
+          <g id="pieces"></g><g id="selectionOverlay" class="selection-overlay screen-only"></g><g id="guides" class="guides screen-only"></g><g id="dimensions" class="dimensions"></g>
+          <g id="calibration" class="calibration"><line x1="15" y1="287" x2="65" y2="287"/><line x1="15" y1="285.5" x2="15" y2="288.5"/><line x1="65" y1="285.5" x2="65" y2="288.5"/><text x="40" y="284.5" text-anchor="middle">Contrôle 50 mm</text></g>
+        </svg>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite">Prêt.</p>
+    </section>
+  </main>
+  <style id="pageStyle">@page { size: A4 portrait; margin: 0; }</style>
+  <script src="geometry.js?v=drive-6"></script><script src="inventory.js?v=drive-6"></script><script src="workflow.js?v=drive-6"></script><script src="library.js?v=drive-6"></script><script src="app.js?v=drive-6"></script>
+</body>
+</html>

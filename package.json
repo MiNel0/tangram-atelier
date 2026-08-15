@@ -1,0 +1,59 @@
+{
+  "name": "tangram-atelier",
+  "version": "1.0.0",
+  "productName": "Tangram Atelier",
+  "description": "Créateur de tangrams et de silhouettes imprimables à taille réelle.",
+  "main": "desktop/main.js",
+  "author": "MiNel0",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test_geometry.js && node test_desktop.js && python -m unittest test_server.py",
+    "dist": "electron-builder --win nsis",
+    "release": "electron-builder --win nsis --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.9"
+  },
+  "devDependencies": {
+    "electron": "43.4.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "fr.tangramatelier.app",
+    "artifactName": "Tangram-Atelier-${version}-Setup.${ext}",
+    "files": [
+      "desktop/**/*",
+      "assets/**/*",
+      "index.html",
+      "style.css",
+      "app.js",
+      "geometry.js",
+      "inventory.js",
+      "workflow.js",
+      "library.js"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Tangram Atelier",
+      "runAfterFinish": true
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "MiNel0",
+      "repo": "tangram-atelier",
+      "releaseType": "release"
+    }
+  }
+}

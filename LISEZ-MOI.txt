@@ -1,0 +1,58 @@
+TANGRAM ATELIER — VERSION DEV
+==============================
+
+LANCEMENT
+---------
+
+Double-cliquez sur LANCER_DEV.bat. L’application s’ouvre sur
+http://127.0.0.1:8765. Fermez la fenêtre du serveur pour l’arrêter.
+TESTER_DEV.bat exécute les tests avec Node.js.
+
+WORKFLOW
+--------
+
+L’application affiche une seule étape à la fois. Les quatre étapes en haut sont
+des boutons : cliquez dessus pour avancer ou revenir en arrière.
+
+1. Choisissez le côté du carré de rangement en millimètres.
+2. Générez la composition, puis cliquez sur « Silhouette ». Le tangram classique est recommandé ;
+   les quantités et la graine restent disponibles dans les options.
+3. Glissez les pièces de la bibliothèque sur l’A4 pour créer la silhouette.
+4. Cliquez sur « Imprimer » : la silhouette est validée automatiquement si
+   au moins une pièce est posée et qu’aucune pièce ne se chevauche.
+
+La bibliothèque affiche chaque pièce séparément, à sa couleur et à son échelle relative. Le total restant est indiqué au-dessus.
+Il n’est pas obligatoire d’utiliser toutes les pièces dans une silhouette. Un
+aperçu de la pièce suit le curseur pendant son glissement vers la feuille.
+
+Les aides au placement et l’import/export sont rangés dans des blocs
+repliables afin de garder seulement les actions utiles à l’écran.
+
+Une nouvelle silhouette commence avec une feuille vide. Une pièce posée quitte
+la bibliothèque ; la flèche de retour sur sa barre flottante l’y replace.
+Dans l’éditeur : cliquez une pièce pour afficher son cadre, sa poignée de
+rotation et sa barre flottante. Glissez la pièce pour la déplacer ou la
+poignée ronde pour la tourner. Maj impose des pas de 15°. Les flèches
+déplacent de 1 mm, Maj + flèches de 5 mm, et F retourne la pièce. Les sommets
+et les arêtes s’aimantent. Au lâcher, les chevauchements sont automatiquement
+corrigés ou la dernière position valide est restaurée.
+
+IMPRESSION
+----------
+
+Choisissez toujours « Taille réelle » ou 100 % et désactivez l’ajustement à
+la page. La boîte d’impression s’ouvre sans quitter l’application.
+La ligne de contrôle doit mesurer exactement 50 mm. Les silhouettes sont
+imprimées entièrement en noir, sans traits entre les pièces.
+
+SAUVEGARDE
+----------
+
+Chaque silhouette contenant au moins une pièce est enregistrée automatiquement
+dans « Mes silhouettes ». La bibliothèque est stockée dans tangram-library.json :
+elle est donc commune à tous les navigateurs de ce PC et reste disponible après fermeture.
+Les anciennes sauvegardes propres à chaque navigateur sont importées automatiquement.
+
+« Exporter » crée mon-tangram.json. « Importer » reprend le carré, la
+composition figée et toutes les silhouettes du fichier ; utilisez ces boutons
+pour conserver une sauvegarde indépendante du navigateur.

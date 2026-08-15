@@ -1,0 +1,6 @@
+node_modules/
+dist/
+A_DONNER_A_MA_COPINE/
+tangram-library.json
+*.log
+__pycache__/
