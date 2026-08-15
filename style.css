@@ -164,7 +164,11 @@ body[data-phase="silhouette"] .piece:active { cursor: grabbing; }
 .calibration text { stroke: none; }
 .status { width: 630px; min-height: 20px; margin: 12px auto 0; color: #506b6e; font-size: 12px; }
 .status.error { color: #a23832; }
-.print-frame { position: fixed; width: 0; height: 0; border: 0; }
+.print-preview { width: min(96vw, 950px); height: 95vh; max-width: none; max-height: none; padding: 0; overflow: hidden; border: 0; border-radius: 14px; background: #e8eeee; box-shadow: 0 20px 70px #173f4355; }
+.print-preview::backdrop { background: #173f4388; }
+.print-preview-toolbar { display: flex; align-items: center; justify-content: space-between; min-height: 64px; padding: 10px 18px; background: white; border-bottom: 1px solid #cbd9da; }
+.print-preview-toolbar .actions { display: flex; gap: 8px; }
+.print-preview iframe { display: block; width: min(100%, 210mm); height: calc(95vh - 64px); margin: auto; border: 0; background: white; box-shadow: 0 4px 18px #173f4333; }
 body[data-phase="silhouette"] #zoneLayer { display: none; }
 
 @media print {

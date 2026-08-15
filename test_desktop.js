@@ -8,6 +8,7 @@ const packageConfig = require('./package.json');
 const appSource = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
 const htmlSource = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 const desktopMainSource = fs.readFileSync(path.join(__dirname, 'desktop', 'main.js'), 'utf8');
+const styleSource = fs.readFileSync(path.join(__dirname, 'style.css'), 'utf8');
 
 assert.match(packageConfig.scripts.dist, /--publish never/, 'La compilation CI ne doit pas publier implicitement avant l’étape GitHub Release.');
 assert.match(htmlSource, /id="printSilhouetteColor"/, 'Le mode d’impression couleur doit être proposé.');
@@ -22,6 +23,12 @@ assert.match(desktopMainSource, /autoUpdater\.autoDownload\s*=\s*true/, 'Les mis
 assert.match(desktopMainSource, /autoUpdater\.autoInstallOnAppQuit\s*=\s*true/, 'Les mises à jour téléchargées doivent être installées automatiquement à la fermeture.');
 assert.match(desktopMainSource, /setInterval\(check, UPDATE_CHECK_INTERVAL_MS\)/, 'Une application laissée ouverte doit rechercher périodiquement les mises à jour.');
 assert.doesNotMatch(desktopMainSource, /update-downloaded[\s\S]+?showMessageBox/, 'Aucune confirmation ne doit bloquer l’installation automatique.');
+
+const printPageSource = appSource.match(/function printPage[\s\S]+?function printSavedSilhouette/)?.[0] || '';
+assert.match(printPageSource, /htmlElement\('dialog', '', 'print-preview'\)/, 'L’impression doit afficher un aperçu intégré visible.');
+assert.match(printPageSource, /printButton\.addEventListener\('click'/, 'L’utilisateur doit lancer l’impression depuis l’aperçu.');
+assert.match(printPageSource, /addEventListener\('load', \(\) => \{ printButton\.disabled = false; \}/, 'Le chargement doit seulement activer le bouton d’impression.');
+assert.match(styleSource, /\.print-preview iframe\s*\{[^}]*width:\s*min\(100%,\s*210mm\)/, 'L’aperçu A4 doit être visible à sa taille maximale dans l’application.');
 
 const groupedProject = Library.projects([
   { id: 'recent', updatedAt: 2, project: { side: 140, seed: 'test', composition: [{ id: 'recent-piece', sourceId: 'recent-source', type: 'triangle', x: 0 }], silhouettes: [{ pieces: [{ sourceId: 'recent-source' }] }] } },

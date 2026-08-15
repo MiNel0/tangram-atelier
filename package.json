@@ -1,6 +1,6 @@
 {
   "name": "tangram-atelier",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "productName": "Tangram Atelier",
   "description": "Créateur de tangrams et de silhouettes imprimables à taille réelle.",
   "main": "desktop/main.js",

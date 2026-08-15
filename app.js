@@ -811,19 +811,31 @@
       .calibration { stroke: #263e41; stroke-width: .35; fill: #263e41; font-size: 2.8px; }
       .calibration text { stroke: none; }
     </style></head><body>${new XMLSerializer().serializeToString(clone)}</body></html>`;
-    document.querySelector('.print-frame')?.remove();
+    document.querySelector('.print-preview')?.remove();
+    const preview = htmlElement('dialog', '', 'print-preview');
+    const toolbar = htmlElement('div', '', 'print-preview-toolbar');
+    const actions = htmlElement('div', '', 'actions');
+    const closeButton = htmlElement('button', 'Retour');
+    const printButton = htmlElement('button', 'Imprimer', 'primary');
     const printFrame = htmlElement('iframe', '', 'print-frame');
     printFrame.title = title;
-    printFrame.setAttribute('aria-hidden', 'true');
     printFrame.srcdoc = printDocument;
-    printFrame.addEventListener('load', () => {
+    printButton.disabled = true;
+    printFrame.addEventListener('load', () => { printButton.disabled = false; }, { once: true });
+    closeButton.addEventListener('click', () => preview.close());
+    printButton.addEventListener('click', () => {
       const printWindow = printFrame.contentWindow;
-      printWindow.addEventListener('afterprint', () => printFrame.remove(), { once: true });
+      printWindow.addEventListener('afterprint', () => preview.close(), { once: true });
       printWindow.focus();
       printWindow.print();
-    }, { once: true });
-    document.body.append(printFrame);
-    status('Boîte d’impression ouverte.');
+    });
+    preview.addEventListener('close', () => preview.remove(), { once: true });
+    actions.append(closeButton, printButton);
+    toolbar.append(htmlElement('strong', title), actions);
+    preview.append(toolbar, printFrame);
+    document.body.append(preview);
+    preview.showModal();
+    status('Aperçu d’impression ouvert.');
   }
 
   function printSavedSilhouette(record) {
