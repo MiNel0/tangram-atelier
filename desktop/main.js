@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -13,6 +13,7 @@ const mimeTypes = {
 
 let server;
 let mainWindow;
+const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
 
 function send(response, status, body, type = 'application/json; charset=utf-8') {
   const content = Buffer.isBuffer(body) ? body : Buffer.from(body);
@@ -81,15 +82,11 @@ async function createWindow() {
 
 function checkForUpdates() {
   if (!app.isPackaged) return;
-  autoUpdater.checkForUpdatesAndNotify().catch(() => {});
-  autoUpdater.on('update-downloaded', async () => {
-    const result = await dialog.showMessageBox(mainWindow, {
-      type: 'info', buttons: ['Installer maintenant', 'Plus tard'], defaultId: 0, cancelId: 1,
-      title: 'Mise à jour prête', message: 'Une nouvelle version de Tangram Atelier est prête.',
-      detail: 'Vos tangrams et silhouettes seront conservés.',
-    });
-    if (result.response === 0) autoUpdater.quitAndInstall();
-  });
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  const check = () => autoUpdater.checkForUpdates().catch(() => {});
+  check();
+  setInterval(check, UPDATE_CHECK_INTERVAL_MS).unref();
 }
 
 if (!app.requestSingleInstanceLock()) app.quit();

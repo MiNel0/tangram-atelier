@@ -7,6 +7,7 @@ const Library = require('./library.js');
 const packageConfig = require('./package.json');
 const appSource = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
 const htmlSource = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+const desktopMainSource = fs.readFileSync(path.join(__dirname, 'desktop', 'main.js'), 'utf8');
 
 assert.match(packageConfig.scripts.dist, /--publish never/, 'La compilation CI ne doit pas publier implicitement avant l’étape GitHub Release.');
 assert.match(htmlSource, /id="printSilhouetteColor"/, 'Le mode d’impression couleur doit être proposé.');
@@ -17,6 +18,10 @@ assert.match(appSource, /appendBlackSilhouette\(piecesLayer, pieces, '#ffffff'\)
 const backwardNavigationSource = appSource.match(/function unlockComposition[\s\S]+?function navigateTo[\s\S]+?if \(target === 'silhouette'\)/)?.[0] || '';
 assert.doesNotMatch(backwardNavigationSource, /state\.silhouettes\s*=\s*\[\]/, 'Revenir aux étapes précédentes ne doit pas supprimer les silhouettes.');
 assert.match(appSource, /function generateComposition\(\)[\s\S]+?confirm\('Modifier la composition supprimera les silhouettes existantes\./, 'La suppression ne doit être proposée qu’au moment de régénérer la composition.');
+assert.match(desktopMainSource, /autoUpdater\.autoDownload\s*=\s*true/, 'Les mises à jour doivent être téléchargées automatiquement.');
+assert.match(desktopMainSource, /autoUpdater\.autoInstallOnAppQuit\s*=\s*true/, 'Les mises à jour téléchargées doivent être installées automatiquement à la fermeture.');
+assert.match(desktopMainSource, /setInterval\(check, UPDATE_CHECK_INTERVAL_MS\)/, 'Une application laissée ouverte doit rechercher périodiquement les mises à jour.');
+assert.doesNotMatch(desktopMainSource, /update-downloaded[\s\S]+?showMessageBox/, 'Aucune confirmation ne doit bloquer l’installation automatique.');
 
 const groupedProject = Library.projects([
   { id: 'recent', updatedAt: 2, project: { side: 140, seed: 'test', composition: [{ id: 'recent-piece', sourceId: 'recent-source', type: 'triangle', x: 0 }], silhouettes: [{ pieces: [{ sourceId: 'recent-source' }] }] } },
