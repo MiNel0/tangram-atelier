@@ -140,12 +140,12 @@
     return overlaps;
   }
 
-  function appendBlackSilhouette(layer, pieces) {
+  function appendBlackSilhouette(layer, pieces, seamColor = '#000000') {
     layer.append(svgElement('path', { d: G.silhouettePath(pieces), fill: '#000000', stroke: 'none', class: 'silhouette-print' }));
     const seams = G.sharedEdges(pieces, .05);
     if (seams.length) layer.append(svgElement('path', {
       d: seams.map((edge) => `M ${edge.start.x} ${edge.start.y} L ${edge.end.x} ${edge.end.y}`).join(' '),
-      fill: 'none', stroke: '#000000', 'stroke-width': '.4', 'stroke-linecap': 'butt', class: 'silhouette-seams',
+      fill: 'none', stroke: seamColor, style: `stroke:${seamColor}`, 'stroke-width': '.4', 'stroke-linecap': 'butt', class: 'silhouette-seams',
     }));
   }
 
@@ -154,7 +154,10 @@
     const pieces = currentPieces();
     const overlaps = state.phase === 'silhouette' && !state.printTarget ? overlapIds(pieces) : new Set();
     const printingSilhouette = state.printTarget === 'silhouette';
-    if (printingSilhouette) appendBlackSilhouette(piecesLayer, pieces);
+    if (printingSilhouette) {
+      if (state.printTarget === 'silhouette-white') appendBlackSilhouette(piecesLayer, pieces, '#ffffff');
+      else appendBlackSilhouette(piecesLayer, pieces);
+    }
     else pieces.forEach((piece) => {
       const polygon = svgElement('polygon', {
         points: G.points(piece).map((point) => `${point.x},${point.y}`).join(' '), fill: piece.color,
@@ -237,6 +240,7 @@
     $('clear').hidden = stage === 'size' && !state.composition.length;
     $('modeLabel').textContent = { size: 'Choisir la taille', composition: 'Créer la composition', silhouette: 'Créer la silhouette', print: 'Prêt à imprimer' }[stage];
     $('printSilhouette').disabled = !silhouette?.validated;
+    $('printSilhouetteWhiteEdges').disabled = !silhouette?.validated;
     $('printSilhouetteColor').disabled = !silhouette?.validated;
   }
 
@@ -465,6 +469,7 @@
     panel.classList.toggle('invalid', !valid);
     panel.textContent = inspection.overlaps ? 'Des pièces se chevauchent.' : !silhouette.pieces.length ? 'Glissez au moins une pièce sur la feuille.' : silhouette.validated ? '✓ Silhouette validée et prête à imprimer.' : '✓ Placement correct. Cliquez sur Imprimer.';
     $('printSilhouette').disabled = !silhouette.validated;
+    $('printSilhouetteWhiteEdges').disabled = !silhouette.validated;
     $('printSilhouetteColor').disabled = !silhouette.validated;
   }
 
@@ -792,7 +797,7 @@
     const clone = page.cloneNode(true);
     clone.querySelectorAll('.screen-only,.dimensions').forEach((node) => node.remove());
     if (printingSilhouette) clone.querySelector('#zoneLayer')?.remove();
-    const title = target === 'silhouette' ? 'Silhouette noire' : target === 'silhouette-color' ? 'Silhouette en couleur' : 'Rangement du tangram';
+    const title = target === 'silhouette' ? 'Silhouette noire' : target === 'silhouette-white' ? 'Silhouette noire avec arêtes blanches' : target === 'silhouette-color' ? 'Silhouette en couleur' : 'Rangement du tangram';
     printPage(title, clone);
     finishPrint();
   }
@@ -1062,6 +1067,7 @@
   $('resetSilhouette').addEventListener('click', () => { const silhouette = activeSilhouette(); if (silhouette) { silhouette.pieces = []; silhouette.validated = false; libraryDirty = true; state.selectedId = null; renderAll(); status('Toutes les pièces sont revenues dans la bibliothèque.'); } });
   $('printComposition').addEventListener('click', () => printView('composition'));
   $('printSilhouette').addEventListener('click', () => printView('silhouette'));
+  $('printSilhouetteWhiteEdges').addEventListener('click', () => printView('silhouette-white'));
   $('printSilhouetteColor').addEventListener('click', () => printView('silhouette-color'));
   $('pieceColor').addEventListener('input', (event) => {
     const piece = selected();
