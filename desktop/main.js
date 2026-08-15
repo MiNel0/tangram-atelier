@@ -1,10 +1,11 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const fs = require('node:fs');
 const http = require('node:http');
 const path = require('node:path');
 const { URL } = require('node:url');
 const { LibraryStore } = require('./store.js');
+const { buildPdfJobs } = require('./usb-sync.js');
 
 const mimeTypes = {
   '.css': 'text/css; charset=utf-8', '.html': 'text/html; charset=utf-8', '.ico': 'image/x-icon',
@@ -13,6 +14,7 @@ const mimeTypes = {
 
 let server;
 let mainWindow;
+let libraryStore;
 const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
 
 function send(response, status, body, type = 'application/json; charset=utf-8') {
@@ -61,7 +63,8 @@ function startServer() {
     fs.mkdirSync(dataFolder, { recursive: true });
     fs.copyFileSync(seedFile, dataFile);
   }
-  server = createServer(root, new LibraryStore(dataFile));
+  libraryStore = new LibraryStore(dataFile);
+  server = createServer(root, libraryStore);
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server.address().port)));
 }
 
@@ -70,7 +73,7 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1440, height: 920, minWidth: 1000, minHeight: 700, show: false,
     title: 'Tangram Atelier', icon: path.join(app.getAppPath(), 'assets', 'icon.png'), backgroundColor: '#f4f8f7',
-    autoHideMenuBar: true, webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
+    autoHideMenuBar: true, webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, preload: path.join(__dirname, 'preload.js') },
   });
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   mainWindow.webContents.on('will-navigate', (event, target) => {
@@ -78,6 +81,38 @@ async function createWindow() {
   });
   mainWindow.once('ready-to-show', () => mainWindow.show());
   await mainWindow.loadURL(`http://127.0.0.1:${port}/`);
+}
+
+async function syncUsb() {
+  const jobs = buildPdfJobs(libraryStore?.read());
+  if (!jobs.length) return { ok: false, error: 'La bibliothèque ne contient aucun document à synchroniser.' };
+  const choice = await dialog.showOpenDialog(mainWindow, {
+    title: 'Choisir la clé USB', buttonLabel: 'Synchroniser ici', properties: ['openDirectory', 'dontAddToRecent'],
+  });
+  if (choice.canceled || !choice.filePaths[0]) return { canceled: true };
+  const selected = path.resolve(choice.filePaths[0]);
+  const output = path.join(selected, 'Tangram Atelier');
+  const temporary = path.join(selected, `.tangram-atelier-${Date.now()}`);
+  const pdfWindow = new BrowserWindow({ show: false, webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
+  pdfWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  try {
+    for (const job of jobs) {
+      const target = path.resolve(temporary, job.folder, job.file);
+      if (!target.startsWith(`${temporary}${path.sep}`)) throw new Error('Chemin PDF invalide');
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      await pdfWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(job.html)}`);
+      const pdf = await pdfWindow.webContents.printToPDF({ pageSize: 'A4', printBackground: true, preferCSSPageSize: true, margins: { top: 0, bottom: 0, left: 0, right: 0 } });
+      fs.writeFileSync(target, pdf);
+    }
+    fs.rmSync(output, { recursive: true, force: true });
+    fs.renameSync(temporary, output);
+    return { ok: true, count: jobs.length, path: output };
+  } catch {
+    return { ok: false, error: 'La synchronisation a échoué. Vérifiez que la clé USB est branchée et dispose de suffisamment d’espace.' };
+  } finally {
+    pdfWindow.destroy();
+    fs.rmSync(temporary, { recursive: true, force: true });
+  }
 }
 
 function checkForUpdates() {
@@ -91,6 +126,7 @@ function checkForUpdates() {
 
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
+  ipcMain.handle('sync-usb', (event) => event.sender === mainWindow?.webContents ? syncUsb() : { ok: false, error: 'Action refusée.' });
   app.on('second-instance', () => { if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); } });
   app.whenReady().then(async () => { await createWindow(); checkForUpdates(); });
   app.on('window-all-closed', () => app.quit());

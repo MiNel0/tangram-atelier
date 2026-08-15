@@ -9,6 +9,8 @@ const appSource = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
 const htmlSource = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 const desktopMainSource = fs.readFileSync(path.join(__dirname, 'desktop', 'main.js'), 'utf8');
 const styleSource = fs.readFileSync(path.join(__dirname, 'style.css'), 'utf8');
+const preloadPath = path.join(__dirname, 'desktop', 'preload.js');
+const preloadSource = fs.existsSync(preloadPath) ? fs.readFileSync(preloadPath, 'utf8') : '';
 
 assert.match(packageConfig.scripts.dist, /--publish never/, 'La compilation CI ne doit pas publier implicitement avant l’étape GitHub Release.');
 assert.match(htmlSource, /id="printSilhouetteColor"/, 'Le mode d’impression couleur doit être proposé.');
@@ -29,6 +31,10 @@ assert.match(printPageSource, /htmlElement\('dialog', '', 'print-preview'\)/, 'L
 assert.match(printPageSource, /printButton\.addEventListener\('click'/, 'L’utilisateur doit lancer l’impression depuis l’aperçu.');
 assert.match(printPageSource, /addEventListener\('load', \(\) => \{ printButton\.disabled = false; \}/, 'Le chargement doit seulement activer le bouton d’impression.');
 assert.match(styleSource, /\.print-preview iframe\s*\{[^}]*width:\s*min\(100%,\s*210mm\)/, 'L’aperçu A4 doit être visible à sa taille maximale dans l’application.');
+assert.match(desktopMainSource, /preload:\s*path\.join\(__dirname, 'preload\.js'\)/, 'Le pont USB doit passer par un preload isolé.');
+assert.match(desktopMainSource, /ipcMain\.handle\('sync-usb'/, 'Le processus principal doit gérer la synchronisation USB.');
+assert.match(desktopMainSource, /webContents\.printToPDF\(\{[^}]*pageSize:\s*'A4'/s, 'Chaque document doit être généré en PDF A4 par Electron.');
+assert.match(preloadSource, /syncUsb:\s*\(\)\s*=>\s*ipcRenderer\.invoke\('sync-usb'\)/, 'Le renderer ne doit exposer que l’action USB nécessaire.');
 
 const groupedProject = Library.projects([
   { id: 'recent', updatedAt: 2, project: { side: 140, seed: 'test', composition: [{ id: 'recent-piece', sourceId: 'recent-source', type: 'triangle', x: 0 }], silhouettes: [{ pieces: [{ sourceId: 'recent-source' }] }] } },
