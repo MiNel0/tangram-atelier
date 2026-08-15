@@ -3,6 +3,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { LibraryStore } = require('./desktop/store.js');
+const packageConfig = require('./package.json');
+
+assert.match(packageConfig.scripts.dist, /--publish never/, 'La compilation CI ne doit pas publier implicitement avant l’étape GitHub Release.');
 
 const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'tangram-desktop-'));
 try {
