@@ -198,7 +198,7 @@
     const box = G.bounds(piece);
     const centerX = (box.minX + box.maxX) / 2;
     const handleY = Math.max(4, box.minY - 8);
-    const toolbarWidth = 96;
+    const toolbarWidth = 112;
     const toolbarX = Math.max(2, Math.min(210 - toolbarWidth - 2, centerX - toolbarWidth / 2));
     const toolbarY = box.minY > 27 ? box.minY - 20 : Math.min(287, box.maxY + 5);
     selectionLayer.append(
@@ -208,10 +208,11 @@
     );
     const toolbar = svgElement('g', { class: 'shape-toolbar', transform: `translate(${toolbarX} ${toolbarY})` });
     toolbar.append(svgElement('rect', { class: 'toolbar-background', width: toolbarWidth, height: 9, rx: 2.5 }));
-    [['rotate-left', '↶ 15°', 'Tourner de 15 degrés à gauche'], ['rotate-right', '15° ↷', 'Tourner de 15 degrés à droite'], ['rotate-left-45', '↶ 45°', 'Tourner de 45 degrés à gauche'], ['rotate-right-45', '45° ↷', 'Tourner de 45 degrés à droite'], ['flip', '⇋', 'Retourner la pièce'], ['return', '↩', 'Remettre dans la bibliothèque']].forEach(([action, label, title], index) => {
+    [['rotate-left', '↶ 15°', 'Tourner de 15 degrés à gauche'], ['rotate-right', '15° ↷', 'Tourner de 15 degrés à droite'], ['rotate-left-45', '↶ 45°', 'Tourner de 45 degrés à gauche'], ['rotate-right-45', '45° ↷', 'Tourner de 45 degrés à droite'], ['color', '●', 'Changer la couleur'], ['flip', '⇋', 'Retourner la pièce'], ['return', '↩', 'Remettre dans la bibliothèque']].forEach(([action, label, title], index) => {
       const tool = svgElement('g', { class: 'direct-tool', transform: `translate(${index * 16} 0)`, 'data-direct-action': action, role: 'button', tabindex: '0', 'aria-label': title });
       tool.append(svgElement('rect', { width: 16, height: 9, rx: 2 }), svgElement('text', { x: 8, y: 5.8, 'text-anchor': 'middle' }));
       tool.lastChild.textContent = label;
+      if (action === 'color') tool.lastChild.setAttribute('style', `fill:${piece.color};stroke:#183137;stroke-width:.25px`);
       toolbar.append(tool);
     });
     const angle = svgElement('text', { class: 'angle-label', x: centerX + 4, y: handleY + 1.2 });
@@ -236,6 +237,7 @@
     $('clear').hidden = stage === 'size' && !state.composition.length;
     $('modeLabel').textContent = { size: 'Choisir la taille', composition: 'Créer la composition', silhouette: 'Créer la silhouette', print: 'Prêt à imprimer' }[stage];
     $('printSilhouette').disabled = !silhouette?.validated;
+    $('printSilhouetteColor').disabled = !silhouette?.validated;
   }
 
   function renderSilhouetteList() {
@@ -308,7 +310,7 @@
     libraryDirty = false;
   }
 
-  function previewSvg(pieces, silhouette = false) {
+  function previewSvg(pieces, mode = 'pieces') {
       const points = pieces.flatMap((piece) => { try { return G.points(piece); } catch { return []; } });
       const minX = points.length ? Math.min(...points.map((point) => point.x)) : 0;
       const minY = points.length ? Math.min(...points.map((point) => point.y)) : 0;
@@ -316,7 +318,7 @@
       const maxY = points.length ? Math.max(...points.map((point) => point.y)) : 1;
       const padding = Math.max(maxX - minX, maxY - minY, 1) * .08;
       const preview = svgElement('svg', { viewBox: `${minX - padding} ${minY - padding} ${maxX - minX + padding * 2} ${maxY - minY + padding * 2}`, 'aria-hidden': 'true' });
-      if (silhouette) preview.append(svgElement('path', { d: G.silhouettePath(pieces), fill: '#183137' }));
+      if (mode === 'black') preview.append(svgElement('path', { d: G.silhouettePath(pieces), fill: '#183137' }));
       else pieces.forEach((piece) => preview.append(svgElement('polygon', { points: G.points(piece).map((point) => `${point.x},${point.y}`).join(' '), fill: piece.color, stroke: '#183137', 'stroke-width': '.35' })));
       return preview;
   }
@@ -329,7 +331,7 @@
       previewButton.type = 'button';
       previewButton.dataset.savedAction = 'edit';
       previewButton.setAttribute('aria-label', `Modifier ${record.name}`);
-      previewButton.append(previewSvg(pieces, true));
+      previewButton.append(previewSvg(pieces, 'color'));
       const info = htmlElement('div', '', 'drive-card-info');
       info.append(htmlElement('strong', record.name));
       info.append(htmlElement('p', `${pieces.length} pièce${pieces.length === 1 ? '' : 's'} utilisée${pieces.length === 1 ? '' : 's'}`, 'drive-meta'));
@@ -463,6 +465,7 @@
     panel.classList.toggle('invalid', !valid);
     panel.textContent = inspection.overlaps ? 'Des pièces se chevauchent.' : !silhouette.pieces.length ? 'Glissez au moins une pièce sur la feuille.' : silhouette.validated ? '✓ Silhouette validée et prête à imprimer.' : '✓ Placement correct. Cliquez sur Imprimer.';
     $('printSilhouette').disabled = !silhouette.validated;
+    $('printSilhouetteColor').disabled = !silhouette.validated;
   }
 
   function renderAll() {
@@ -777,18 +780,19 @@
   }
 
   function printView(target) {
-    if (target === 'silhouette' && !activeSilhouette()?.validated) {
+    const printingSilhouette = target.startsWith('silhouette');
+    if (printingSilhouette && !activeSilhouette()?.validated) {
       status('Validez la silhouette avant de l’imprimer.', true);
       return;
     }
     state.printTarget = target;
-    document.body.classList.toggle('print-silhouette', target === 'silhouette');
+    document.body.classList.toggle('print-silhouette', printingSilhouette);
     document.body.classList.toggle('print-composition', target === 'composition');
     renderPieces();
     const clone = page.cloneNode(true);
     clone.querySelectorAll('.screen-only,.dimensions').forEach((node) => node.remove());
-    if (target === 'silhouette') clone.querySelector('#zoneLayer')?.remove();
-    const title = target === 'silhouette' ? 'Silhouette noire' : 'Rangement du tangram';
+    if (printingSilhouette) clone.querySelector('#zoneLayer')?.remove();
+    const title = target === 'silhouette' ? 'Silhouette noire' : target === 'silhouette-color' ? 'Silhouette en couleur' : 'Rangement du tangram';
     printPage(title, clone);
     finishPrint();
   }
@@ -829,8 +833,10 @@
     clone.querySelector('#zoneLayer')?.remove();
     const layer = clone.querySelector('#pieces');
     layer.replaceChildren();
-    appendBlackSilhouette(layer, pieces);
-    printPage('Silhouette noire', clone);
+    layer.replaceChildren(...pieces.map((piece) => svgElement('polygon', {
+      points: G.points(piece).map((point) => `${point.x},${point.y}`).join(' '), fill: piece.color, class: 'piece',
+    })));
+    printPage('Silhouette en couleur', clone);
   }
 
   function printSavedComposition(group) {
@@ -1016,6 +1022,7 @@
     else if (action === 'rotate-right') rotateSelected(15);
     else if (action === 'rotate-left-45') rotateSelected(-45);
     else if (action === 'rotate-right-45') rotateSelected(45);
+    else if (action === 'color') $('pieceColor').click();
     else if (action === 'flip') flipSelected();
     else if (action === 'return') returnSelectedToLibrary();
   });
@@ -1055,6 +1062,16 @@
   $('resetSilhouette').addEventListener('click', () => { const silhouette = activeSilhouette(); if (silhouette) { silhouette.pieces = []; silhouette.validated = false; libraryDirty = true; state.selectedId = null; renderAll(); status('Toutes les pièces sont revenues dans la bibliothèque.'); } });
   $('printComposition').addEventListener('click', () => printView('composition'));
   $('printSilhouette').addEventListener('click', () => printView('silhouette'));
+  $('printSilhouetteColor').addEventListener('click', () => printView('silhouette-color'));
+  $('pieceColor').addEventListener('input', (event) => {
+    const piece = selected();
+    if (!piece) return;
+    piece.color = event.target.value;
+    libraryDirty = true;
+    persistSilhouette();
+    renderPieces();
+    renderSavedLibrary();
+  });
   $('print').addEventListener('click', () => printView('composition'));
   window.addEventListener('afterprint', finishPrint);
   $('save').addEventListener('click', saveProject);

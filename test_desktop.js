@@ -4,8 +4,13 @@ const os = require('node:os');
 const path = require('node:path');
 const { LibraryStore } = require('./desktop/store.js');
 const packageConfig = require('./package.json');
+const appSource = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+const htmlSource = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 
 assert.match(packageConfig.scripts.dist, /--publish never/, 'La compilation CI ne doit pas publier implicitement avant l’étape GitHub Release.');
+assert.match(htmlSource, /id="printSilhouetteColor"/, 'Le mode d’impression couleur doit être proposé.');
+assert.match(appSource, /pieceColor'\)\.addEventListener\('input'/, 'La couleur de la pièce sélectionnée doit être modifiable.');
+assert.match(appSource, /previewSvg\(pieces, 'color'\)/, 'Les cartes de silhouettes doivent afficher les couleurs enregistrées.');
 
 const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'tangram-desktop-'));
 try {
