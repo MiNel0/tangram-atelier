@@ -72,7 +72,15 @@
       group.updatedAt = Math.max(group.updatedAt || 0, record.updatedAt || 0);
       group.recordIds.push(record.id);
       if (!(project.silhouettes || []).length) group.projectRecordId = record.id;
-      (project.silhouettes || []).forEach((silhouette) => group.project.silhouettes.push({ ...JSON.parse(JSON.stringify(silhouette)), libraryId: record.id }));
+      (project.silhouettes || []).forEach((silhouette) => {
+        const copy = JSON.parse(JSON.stringify(silhouette));
+        copy.pieces = (copy.pieces || []).map((piece) => {
+          const index = (project.composition || []).findIndex((source) => (source.sourceId || source.id) === piece.sourceId);
+          const master = group.project.composition?.[index];
+          return master ? { ...piece, sourceId: master.sourceId || master.id } : piece;
+        });
+        group.project.silhouettes.push({ ...copy, libraryId: record.id });
+      });
     });
     return [...groups.values()].sort((a, b) => b.updatedAt - a.updatedAt);
   };

@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { LibraryStore } = require('./desktop/store.js');
+const Library = require('./library.js');
 const packageConfig = require('./package.json');
 const appSource = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
 const htmlSource = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
@@ -13,6 +14,12 @@ assert.match(htmlSource, /id="printSilhouetteWhiteEdges"/, 'Le mode noir avec ar
 assert.match(appSource, /pieceColor'\)\.addEventListener\('input'/, 'La couleur de la pièce sélectionnée doit être modifiable.');
 assert.match(appSource, /previewSvg\(pieces, 'color'\)/, 'Les cartes de silhouettes doivent afficher les couleurs enregistrées.');
 assert.match(appSource, /appendBlackSilhouette\(piecesLayer, pieces, '#ffffff'\)/, 'Les arêtes blanches doivent être rendues dans la silhouette noire.');
+
+const groupedProject = Library.projects([
+  { id: 'recent', updatedAt: 2, project: { side: 140, seed: 'test', composition: [{ id: 'recent-piece', sourceId: 'recent-source', type: 'triangle', x: 0 }], silhouettes: [{ pieces: [{ sourceId: 'recent-source' }] }] } },
+  { id: 'older', updatedAt: 1, project: { side: 140, seed: 'test', composition: [{ id: 'older-piece', sourceId: 'older-source', type: 'triangle', x: 0 }], silhouettes: [{ pieces: [{ sourceId: 'older-source' }] }] } },
+])[0];
+assert.deepEqual(groupedProject.project.silhouettes.map((item) => item.pieces[0].sourceId), ['recent-source', 'recent-source'], 'Les silhouettes regroupées doivent référencer la composition commune.');
 
 const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'tangram-desktop-'));
 try {
